@@ -1,4 +1,4 @@
-const clientId = '45f2da97267d44bcb687ef81ba36986a'; // 👈 Replace this
+const clientId = '45f2da97267d44bcb687ef81ba36986a'; // Replace this
 const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/callback.html';
 let accessToken = null;
 
@@ -75,19 +75,18 @@ window.onload = async () => {
   accessToken = stored;
   document.getElementById('createPlaylistBtn').disabled = false;
 
-  // ✅ Fetch user's existing playlists
   try {
     const res = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
+      headers: { Authorization: `Bearer ${accessToken}` }
     });
 
-    if (!res.ok) {
-      throw new Error("Failed to fetch playlists");
+    const data = await res.json();
+
+    if (!data.items) {
+      console.error('No playlists found or token not authorized');
+      return;
     }
 
-    const data = await res.json();
     const select = document.getElementById('playlistSelect');
 
     data.items.forEach(pl => {
@@ -97,7 +96,9 @@ window.onload = async () => {
       select.appendChild(opt);
     });
 
+    console.log(`✅ Loaded ${data.items.length} playlists into dropdown`);
+
   } catch (err) {
-    console.error('Could not load playlists:', err);
+    console.error('🚨 Failed to fetch playlists:', err);
   }
 };
