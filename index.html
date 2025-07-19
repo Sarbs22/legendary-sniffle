@@ -5,11 +5,13 @@
   <title>Spotify Playlist Generator</title>
 </head>
 <body>
-  <h1>Paste Track IDs to Create Playlist</h1>
-  <textarea id="trackIds" rows="10" cols="50" placeholder="Enter Spotify track URIs or IDs..."></textarea>
+  <h1>Generate Playlist</h1>
+  <textarea id="trackIds" rows="10" cols="50" placeholder="Enter track IDs or URIs here..."></textarea>
   <br>
-  <button id="createPlaylist">Create Playlist</button>
+  <button id="loginBtn">Login with Spotify</button>
+  <button id="createPlaylistBtn" disabled>Create Playlist</button>
 
+  <script src="pkce.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
