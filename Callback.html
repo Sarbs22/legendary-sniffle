@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head><title>Spotify Callback</title></head>
+<body>
+  <script src="pkce.js"></script>
+  <script>
+    const clientId = 'YOUR_CLIENT_ID';
+    const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/callback.html';
+
+    async function handleRedirect() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const codeVerifier = localStorage.getItem('code_verifier');
+
+      const body = new URLSearchParams({
+        client_id: clientId,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+        code_verifier: codeVerifier
+      });
+
+      const res = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body.toString()
+      });
+
+      const data = await res.json();
+      sessionStorage.setItem('access_token', data.access_token);
+      window.location.href = 'index.html';
+    }
+
+    handleRedirect();
+  </script>
+</body>
+</html>
