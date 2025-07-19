@@ -1,5 +1,5 @@
 const clientId = '45f2da97267d44bcb687ef81ba36986a';
-const redirectUri = 'https://ryansarbello.github.io/spotify-playlist-generator/';
+const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/';
 
 function getAccessToken() {
   const hash = window.location.hash;
