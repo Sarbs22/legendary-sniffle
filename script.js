@@ -1,4 +1,4 @@
-const clientId = 'YOUR_CLIENT_ID'; // Replace with your actual Client ID
+const clientId = '45f2da97267d44bcb687ef81ba36986a'; // Replace with your actual Client ID
 const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/callback.html';
 let accessToken = null;
 
