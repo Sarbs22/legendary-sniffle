@@ -8,7 +8,7 @@ document.getElementById('loginBtn').onclick = async () => {
 
   localStorage.setItem('code_verifier', codeVerifier);
 
-  const scope = 'playlist-modify-private playlist-modify-public user-read-private';
+  const scope = 'playlist-modify-private playlist-modify-public user-read-private playlist-read-private';
   const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${codeChallenge}`;
 
   window.location = authUrl;
@@ -40,7 +40,7 @@ document.getElementById('createPlaylistBtn').onclick = async () => {
       },
       body: JSON.stringify({
         name: name,
-        description: 'Created with PKCE playlist generator',
+        description: 'Created using PKCE playlist generator',
         public: false
       })
     });
@@ -68,24 +68,36 @@ document.getElementById('createPlaylistBtn').onclick = async () => {
   alert(`✅ Added ${uris.length} tracks to "${playlistName}"`);
 };
 
-window.onload = () => {
+window.onload = async () => {
   const stored = sessionStorage.getItem('access_token');
-  if (stored) {
-    accessToken = stored;
-    document.getElementById('createPlaylistBtn').disabled = false;
+  if (!stored) return;
 
-    fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-      const select = document.getElementById('playlistSelect');
-      data.items.forEach(pl => {
-        const opt = document.createElement('option');
-        opt.value = pl.id;
-        opt.textContent = pl.name;
-        select.appendChild(opt);
-      });
+  accessToken = stored;
+  document.getElementById('createPlaylistBtn').disabled = false;
+
+  // ✅ Fetch user's existing playlists
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
     });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch playlists");
+    }
+
+    const data = await res.json();
+    const select = document.getElementById('playlistSelect');
+
+    data.items.forEach(pl => {
+      const opt = document.createElement('option');
+      opt.value = pl.id;
+      opt.textContent = pl.name;
+      select.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error('Could not load playlists:', err);
   }
 };
