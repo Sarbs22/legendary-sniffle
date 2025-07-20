@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Spotify Playlist Generator</title>
+  <script defer src="pkce.js"></script>
+  <script defer src="script.js"></script>
 </head>
 <body>
   <h1>Spotify Playlist Generator</h1>
 
-  <h3>Step 1: Log in</h3>
-  <button id="loginBtn">Login with Spotify</button>
+  <h2>Step 1: Enter Client ID & Log in</h2>
+  <input id="clientId" type="text" placeholder="Enter Spotify Client ID..." />
+  <button id="login">Login with Spotify</button>
 
-  <h3>Step 2: Choose Playlist Destination</h3>
+  <h2>Step 2: Choose Playlist Destination</h2>
   <select id="playlistSelect">
     <option value="new">➕ Create New Playlist</option>
   </select>
-  <input id="newPlaylistName" type="text" placeholder="New playlist name (if creating new)">
-  
-  <h3>Step 3: Paste Track IDs or URIs</h3>
-  <textarea id="trackIds" rows="10" cols="80" placeholder="Paste Spotify track IDs or URIs here..."></textarea>
-  <br><br>
-  <button id="createPlaylistBtn" disabled>Create/Add to Playlist</button>
+  <input type="text" id="newPlaylistName" placeholder="New playlist name (if creating new)"/>
 
-  <script src="pkce.js"></script>
-  <script src="script.js"></script>
+  <h2>Step 3: Paste Track IDs or URIs</h2>
+  <textarea id="trackIds" rows="10" cols="60" placeholder="Paste Spotify track IDs or URIs here..."></textarea>
+  <br />
+  <button id="createPlaylistBtn" disabled>Create/Add to Playlist</button>
 </body>
 </html>
