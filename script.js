@@ -1,41 +1,71 @@
-function generateCodeVerifier(length = 128) {
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let text = "";
-  for (let i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
-}
+window.onload = async () => {
+  const accessToken = localStorage.getItem('access_token');
+  const clientIdInput = document.getElementById('clientIdInput');
+  const storedClientId = localStorage.getItem('client_id');
 
-async function generateCodeChallenge(codeVerifier) {
-  const data = new TextEncoder().encode(codeVerifier);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
+  if (storedClientId) clientIdInput.value = storedClientId;
+  if (!accessToken) return;
 
-document.getElementById("login").addEventListener("click", async () => {
-  const clientId = document.getElementById("clientId").value.trim();
-  if (!clientId) return alert("Please enter your Spotify Client ID");
+  document.getElementById('createPlaylistBtn').disabled = false;
 
-  localStorage.setItem("client_id", clientId);
+  const user = await fetch('https://api.spotify.com/v1/me', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  }).then(res => res.json());
 
-  const codeVerifier = generateCodeVerifier();
-  localStorage.setItem("code_verifier", codeVerifier);
+  const playlists = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  }).then(res => res.json());
 
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-  const redirectUri = window.location.origin + "/callback.html";
-
-  const params = new URLSearchParams({
-    response_type: "code",
-    client_id: clientId,
-    scope: "playlist-modify-public playlist-modify-private playlist-read-private",
-    redirect_uri: redirectUri,
-    code_challenge_method: "S256",
-    code_challenge: codeChallenge,
+  const select = document.getElementById('playlistSelect');
+  playlists.items.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    select.appendChild(opt);
   });
 
-  window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
-});
+  document.getElementById('createPlaylistBtn').onclick = async () => {
+    let playlistId, playlistName;
+    const trackInput = document.getElementById('trackIds').value;
+    const trackUris = trackInput
+      .split(/\s+/)
+      .map(id => id.trim())
+      .filter(Boolean)
+      .map(id => id.includes(':') ? id : `spotify:track:${id}`);
+
+    if (select.value === 'new') {
+      const name = document.getElementById('newPlaylistName').value || 'New Playlist';
+      const playlist = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          description: 'Created with PKCE',
+          public: false
+        })
+      }).then(res => res.json());
+      playlistId = playlist.id;
+      playlistName = playlist.name;
+    } else {
+      playlistId = select.value;
+      playlistName = select.options[select.selectedIndex].text;
+    }
+
+    for (let i = 0; i < trackUris.length; i += 100) {
+      const batch = trackUris.slice(i, i + 100);
+      await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ uris: batch })
+      });
+    }
+
+    alert(`Added ${trackUris.length} tracks to "${playlistName}"`);
+  };
+};
