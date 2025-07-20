@@ -10,14 +10,15 @@
 <body>
   <h1>Spotify Playlist Generator</h1>
 
-  <h2>Step 1: Log in</h2>
+  <h2>Step 1: Enter Client ID & Log in</h2>
+  <input id="clientIdInput" type="text" placeholder="Enter Spotify Client ID" />
   <button id="loginBtn">Login with Spotify</button>
 
   <h2>Step 2: Playlist Destination</h2>
   <select id="playlistSelect">
     <option value="new">➕ Create New Playlist</option>
   </select>
-  <input id="newPlaylistName" type="text" placeholder="New playlist name (if creating new)">
+  <input id="newPlaylistName" type="text" placeholder="New playlist name (if creating new)" />
 
   <h2>Step 3: Paste Track IDs or URIs</h2>
   <textarea id="trackIds" rows="10" cols="80" placeholder="Paste Spotify track IDs or URIs here..."></textarea>
