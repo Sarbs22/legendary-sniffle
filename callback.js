@@ -1,4 +1,4 @@
-const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/callback.html';
+const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/';
 
 (async () => {
   const queryString = new URLSearchParams(window.location.search);
