@@ -1,4 +1,4 @@
-const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/callback.html';
+const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/';
 const scopes = 'playlist-modify-private playlist-modify-public playlist-read-private';
 
 function generateCodeVerifier(length) {
