@@ -17,10 +17,9 @@ async function generateCodeChallenge(verifier) {
 }
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
-  // Read from dedicated input instead of prompt
   const clientId = document.getElementById('clientIdInput').value.trim();
   if (!clientId) {
-    alert('Client ID is required');
+    alert('Client ID is required');
     return;
   }
   localStorage.setItem('client_id', clientId);
