@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Export Playlist Data</title>
+  <script defer src="export.js"></script>
+</head>
+<body>
+  <h1>Export Playlist Data</h1>
+  <p><a href="index.html">← Back to Generator</a></p>
+
+  <h2>Step 1: Enter or Paste Playlist URI/ID</h2>
+  <input id="playlistUri" type="text" size="50"
+         placeholder="https://open.spotify.com/playlist/XXXXXXXXXXXX or just the ID">
+
+  <h2>Step 2: Download CSV</h2>
+  <button id="exportBtn" disabled>Export &amp; Download CSV</button>
+  <div id="status"></div>
+  <a id="downloadLink" style="display:none;"></a>
+</body>
+</html>
