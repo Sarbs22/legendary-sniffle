@@ -1,71 +1,53 @@
 window.onload = async () => {
-  const accessToken = localStorage.getItem('access_token');
-  const clientIdInput = document.getElementById('clientIdInput');
-  const storedClientId = localStorage.getItem('client_id');
-
-  if (storedClientId) clientIdInput.value = storedClientId;
-  if (!accessToken) return;
+  const token = sessionStorage.getItem('access_token');
+  if (!token) return;
 
   document.getElementById('createPlaylistBtn').disabled = false;
+  const headers = { Authorization: `Bearer ${token}` };
 
-  const user = await fetch('https://api.spotify.com/v1/me', {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  }).then(res => res.json());
-
-  const playlists = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  }).then(res => res.json());
+  const user = await fetch('https://api.spotify.com/v1/me', { headers }).then(r => r.json());
+  const playlists = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', { headers })
+    .then(r => r.json());
 
   const select = document.getElementById('playlistSelect');
-  playlists.items.forEach(p => {
+  playlists.items.forEach(pl => {
     const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name;
+    opt.value = pl.id;
+    opt.textContent = pl.name;
     select.appendChild(opt);
   });
 
-  document.getElementById('createPlaylistBtn').onclick = async () => {
-    let playlistId, playlistName;
-    const trackInput = document.getElementById('trackIds').value;
-    const trackUris = trackInput
+  document.getElementById('createPlaylistBtn').addEventListener('click', async () => {
+    const raw = document.getElementById('trackIds').value;
+    const uris = raw
       .split(/\s+/)
-      .map(id => id.trim())
       .filter(Boolean)
       .map(id => id.includes(':') ? id : `spotify:track:${id}`);
 
+    let playlistId, playlistName;
     if (select.value === 'new') {
       const name = document.getElementById('newPlaylistName').value || 'New Playlist';
-      const playlist = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+      const pl = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name,
-          description: 'Created with PKCE',
-          public: false
-        })
-      }).then(res => res.json());
-      playlistId = playlist.id;
-      playlistName = playlist.name;
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, public: false })
+      }).then(r => r.json());
+      playlistId = pl.id;
+      playlistName = pl.name;
     } else {
       playlistId = select.value;
       playlistName = select.options[select.selectedIndex].text;
     }
 
-    for (let i = 0; i < trackUris.length; i += 100) {
-      const batch = trackUris.slice(i, i + 100);
+    for (let i = 0; i < uris.length; i += 100) {
+      const batch = uris.slice(i, i + 100);
       await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ uris: batch })
       });
     }
 
-    alert(`Added ${trackUris.length} tracks to "${playlistName}"`);
-  };
+    alert(`Added ${uris.length} tracks to "${playlistName}"`);
+  });
 };
