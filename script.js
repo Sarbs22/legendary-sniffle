@@ -1,104 +1,41 @@
-const clientId = '45f2da97267d44bcb687ef81ba36986a'; // Replace this
-const redirectUri = 'https://sarbs22.github.io/legendary-sniffle/callback.html';
-let accessToken = null;
+function generateCodeVerifier(length = 128) {
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let text = "";
+  for (let i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
 
-document.getElementById('loginBtn').onclick = async () => {
+async function generateCodeChallenge(codeVerifier) {
+  const data = new TextEncoder().encode(codeVerifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+document.getElementById("login").addEventListener("click", async () => {
+  const clientId = document.getElementById("clientId").value.trim();
+  if (!clientId) return alert("Please enter your Spotify Client ID");
+
+  localStorage.setItem("client_id", clientId);
+
   const codeVerifier = generateCodeVerifier();
+  localStorage.setItem("code_verifier", codeVerifier);
+
   const codeChallenge = await generateCodeChallenge(codeVerifier);
+  const redirectUri = window.location.origin + "/callback.html";
 
-  localStorage.setItem('code_verifier', codeVerifier);
-
-  const scope = 'playlist-modify-private playlist-modify-public user-read-private playlist-read-private';
-  const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${codeChallenge}`;
-
-  window.location = authUrl;
-};
-
-document.getElementById('createPlaylistBtn').onclick = async () => {
-  const raw = document.getElementById('trackIds').value.trim();
-  const uris = raw
-    .split(/[\s,]+/)
-    .filter(Boolean)
-    .map(id => id.includes(':') ? id : `spotify:track:${id}`);
-
-  const userRes = await fetch('https://api.spotify.com/v1/me', {
-    headers: { Authorization: `Bearer ${accessToken}` }
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: clientId,
+    scope: "playlist-modify-public playlist-modify-private playlist-read-private",
+    redirect_uri: redirectUri,
+    code_challenge_method: "S256",
+    code_challenge: codeChallenge,
   });
-  const user = await userRes.json();
 
-  const playlistSelect = document.getElementById('playlistSelect');
-  let playlistId;
-  let playlistName;
-
-  if (playlistSelect.value === 'new') {
-    const name = document.getElementById('newPlaylistName').value || 'Generated Playlist';
-    const playlistRes = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: name,
-        description: 'Created using PKCE playlist generator',
-        public: false
-      })
-    });
-    const playlist = await playlistRes.json();
-    playlistId = playlist.id;
-    playlistName = playlist.name;
-  } else {
-    playlistId = playlistSelect.value;
-    playlistName = playlistSelect.options[playlistSelect.selectedIndex].text;
-  }
-
-  const chunkSize = 100;
-  for (let i = 0; i < uris.length; i += chunkSize) {
-    const chunk = uris.slice(i, i + chunkSize);
-    await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ uris: chunk })
-    });
-  }
-
-  alert(`✅ Added ${uris.length} tracks to "${playlistName}"`);
-};
-
-window.onload = async () => {
-  const stored = sessionStorage.getItem('access_token');
-  if (!stored) return;
-
-  accessToken = stored;
-  document.getElementById('createPlaylistBtn').disabled = false;
-
-  try {
-    const res = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-
-    const data = await res.json();
-
-    if (!data.items) {
-      console.error('No playlists found or token not authorized');
-      return;
-    }
-
-    const select = document.getElementById('playlistSelect');
-
-    data.items.forEach(pl => {
-      const opt = document.createElement('option');
-      opt.value = pl.id;
-      opt.textContent = pl.name;
-      select.appendChild(opt);
-    });
-
-    console.log(`✅ Loaded ${data.items.length} playlists into dropdown`);
-
-  } catch (err) {
-    console.error('🚨 Failed to fetch playlists:', err);
-  }
-};
+  window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+});
